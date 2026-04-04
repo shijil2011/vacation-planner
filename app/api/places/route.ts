@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const lat = searchParams.get('lat');
-  const lon = searchParams.get('lon');
+  const query = searchParams.get('query');
   try {
-    const res = await fetch(`https://api.openmeteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_10m_max`);
+    const res = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY}&query=${query}`);
     return NextResponse.json(await res.json());
   } catch {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });

@@ -1,109 +1,85 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-import { motion } from "framer-motion";
-import { MapPin, Sun, Clock, CheckCircle2 } from "lucide-react";
+const coords: Record<string, { lat: number; lon: number }> = {
+  paris: { lat: 48.8566, lon: 2.3522 },
+  bali: { lat: -8.3405, lon: 115.0920 },
+  tokyo: { lat: 35.6762, lon: 139.6503 },
+  'new york': { lat: 40.7128, lon: -74.0060 },
+  maldives: { lat: 4.1755, lon: 73.5093 },
+  dubai: { lat: 25.2048, lon: 55.2708 },
+  rome: { lat: 41.9028, lon: 12.4964 },
+  barcelona: { lat: 41.3851, lon: 2.1734 },
+};
 
-export default function TripResults() {
-  // Mock data
-  const days = [
-    { day: 1, title: "Arrival & Exploration", activities: ["Check into hotel", "Walk around city center", "Welcome dinner at local restaurant"] },
-    { day: 2, title: "Cultural Highlights", activities: ["Visit main museum", "Lunch at cafe", "Sunset viewpoint"] },
-    { day: 3, title: "Nature & Relaxation", activities: ["Day trip to nearby park", "Picnic lunch", "Spa evening"] },
-  ];
+export default function TripPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const [trip, setTrip] = useState<any>(null);
+  const [weather, setWeather] = useState<any>(null);
+
+  useEffect(() => {
+    const data = localStorage.getItem(`trip_${id}`);
+    if (!data) {
+      router.push("/plan");
+      return;
+    }
+    const parsed = JSON.parse(data);
+    setTrip(parsed);
+    
+    // Fetch weather
+    const dest = parsed.formData?.destination?.toLowerCase() || '';
+    const loc = coords[dest] || coords['paris']; // fallback
+    fetch(`/api/weather?lat=${loc.lat}&lon=${loc.lon}`)
+      .then(r => r.json())
+      .then(w => setWeather(w))
+      .catch(console.error);
+  }, [id, router]);
+
+  if (!trip) return <div className="p-10 text-center">Loading Trip...</div>;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Banner */}
-      <div className="h-64 md:h-96 relative bg-dark overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-80" />
-        <div className="absolute inset-0 flex items-center justify-center flex-col text-white text-center px-4">
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="text-4xl md:text-6xl font-bold mb-4"
-          >
-            Your Trip Plan
-          </motion.h1>
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center gap-2 text-lg md:text-xl"
-          >
-            <MapPin className="w-5 h-5" /> <span>Dream Destination • 3 Days</span>
-          </motion.div>
-        </div>
+    <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto space-y-8">
+      <div className="glass p-8 rounded-2xl">
+        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+          Your Trip to {trip.destination || trip.formData?.destination || "Unknown"}
+        </h1>
+        <p className="mt-4 text-lg">Have a great time for {trip.formData?.days || 3} days!</p>
       </div>
-
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
-          
-          {/* Main Itinerary */}
-          <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-2xl font-bold mb-6">Daily Itinerary</h2>
-            {days.map((day, idx) => (
-              <motion.div 
-                key={day.day}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-              >
-                <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
-                  <div className="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center font-bold text-lg">
-                    D{day.day}
-                  </div>
-                  <h3 className="text-xl font-semibold">{day.title}</h3>
-                </div>
-                <ul className="space-y-4">
-                  {day.activities.map((act, i) => (
-                    <li key={i} className="flex gap-3">
-                      <Clock className="w-5 h-5 text-gray-400 shrink-0" />
-                      <span className="text-gray-600">{act}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Weather Widget */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-blue-400 to-primary rounded-2xl p-6 text-white shadow-lg"
-            >
-              <h3 className="font-semibold mb-4 flex items-center gap-2"><Sun className="w-5 h-5" /> Weather Forecast</h3>
-              <div className="flex justify-between items-center">
-                <div className="text-4xl font-bold">24°C</div>
-                <div className="text-right">
-                  <div className="text-blue-100">Mostly Sunny</div>
-                  <div className="text-sm">H: 26° L: 18°</div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Packing List */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-            >
-              <h3 className="font-semibold mb-4 text-lg">Essential Packing</h3>
-              <ul className="space-y-3">
-                {["Comfortable shoes", "Light jacket", "Camera", "Power bank", "Sunscreen"].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-600">
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                    {item}
-                  </li>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="glass p-6 rounded-2xl">
+          <h2 className="text-2xl font-semibold mb-4">Itinerary</h2>
+          {trip.itinerary?.map((day: any) => (
+            <div key={day.day} className="mb-4">
+              <h3 className="font-bold text-lg">Day {day.day}: {day.title}</h3>
+              <ul className="list-disc pl-5">
+                {day.activities?.map((act: any, i: number) => (
+                  <li key={i}>{act.time} - {act.title} ({act.location})</li>
                 ))}
               </ul>
-            </motion.div>
-          </div>
+            </div>
+          ))}
         </div>
+        
+        <div className="glass p-6 rounded-2xl">
+          <h2 className="text-2xl font-semibold mb-4">Weather</h2>
+          {weather ? (
+            <pre className="text-sm overflow-auto">{JSON.stringify(weather.daily?.temperature_2m_max, null, 2)}</pre>
+          ) : (
+            <p>Loading weather...</p>
+          )}
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">Budget</h2>
+          <pre className="text-sm overflow-auto">{JSON.stringify(trip.budget, null, 2)}</pre>
+        </div>
+      </div>
+      
+      <div className="glass p-6 rounded-2xl flex justify-center gap-4">
+        <button onClick={() => window.print()} className="px-6 py-2 bg-primary text-white rounded">Print</button>
+        <button onClick={() => router.push('/plan')} className="px-6 py-2 border border-primary text-primary rounded">Plan Another</button>
       </div>
     </div>
   );

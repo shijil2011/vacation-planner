@@ -1,22 +1,32 @@
+import Link from 'next/link';
+
 export default function AboutPage() {
   return (
-    <div className="min-h-screen py-20 bg-background">
-      <div className="container mx-auto px-4 max-w-3xl text-center">
-        <h1 className="text-4xl font-bold text-dark mb-6">About TripBuilder</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          TripBuilder is your ultimate AI-powered travel companion. We believe that planning a vacation should be as exciting as the trip itself, not a stressful chore.
-        </p>
-        <div className="bg-white p-8 rounded-3xl shadow-sm text-left">
-          <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
-          <p className="text-gray-600 mb-6">
-            To empower travelers to explore the world with personalized, meticulously crafted itineraries generated in minutes. By combining cutting-edge artificial intelligence with vast travel data, we provide recommendations that perfectly match your vibe, budget, and schedule.
-          </p>
-          <h2 className="text-2xl font-semibold mb-4">How We Built This</h2>
-          <p className="text-gray-600">
-            This platform uses Next.js 14 App Router, beautifully animated with Framer Motion, and styled with Tailwind CSS. We aggregate data from top-tier travel and weather APIs to bring you accurate and inspiring travel plans.
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto space-y-12">
+      <section className="glass p-12 rounded-3xl text-center bg-gradient-to-r from-blue-50 to-purple-50">
+        <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-6">Our Mission</h1>
+        <p className="text-xl max-w-2xl mx-auto text-gray-700">To make travel planning effortless, beautiful, and completely personalized.</p>
+      </section>
+      
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { label: "Trips Planned", value: "10K+" },
+          { label: "Happy Travelers", value: "25K+" },
+          { label: "Destinations", value: "150+" },
+          { label: "Reviews", value: "4.9/5" }
+        ].map((stat, i) => (
+          <div key={i} className="glass p-6 rounded-2xl text-center">
+            <div className="text-3xl font-bold text-primary mb-2">{stat.value}</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wider">{stat.label}</div>
+          </div>
+        ))}
+      </section>
+      
+      <section className="text-center py-12">
+        <Link href="/plan" className="px-8 py-4 bg-primary text-white rounded-xl font-medium text-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25">
+          Start Planning Now
+        </Link>
+      </section>
     </div>
   );
 }

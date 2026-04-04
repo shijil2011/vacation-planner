@@ -1,9 +1,14 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { POPULAR_DESTINATIONS } from "@/lib/constants";
 import { Search, MapPin, Calendar, Users, DollarSign, Sparkles, Shield, Clock } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
+  const [destination, setDestination] = useState("");
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -21,7 +26,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative text-left">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                <input type="text" placeholder="Where to?" className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <input type="text" placeholder="Where to?" value={destination} onChange={(e) => setDestination(e.target.value)} onKeyDown={(e) => e.key === "Enter" && router.push(`/plan?destination=${destination}`)} className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <div className="relative text-left">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
