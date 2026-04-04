@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -22,8 +23,8 @@ export default function DestinationsPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {destinations.map((dest, i) => (
             <div key={i} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
-              <div className="h-48 overflow-hidden">
-                <img src={dest.image} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="h-48 overflow-hidden relative">
+                <Image src={dest.image} alt={dest.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2">{dest.name}</h3>

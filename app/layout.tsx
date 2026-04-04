@@ -7,8 +7,8 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TripBuilder | Plan Your Dream Vacation",
-  description: "Create complete vacation plans with flights, hotels, and itineraries in minutes.",
+  title: "TripBuilder | AI-powered Vacation Planner",
+  description: "Plan your perfect getaway with AI. Get personalized itineraries, find the best deals, and enjoy unforgettable experiences.",
 };
 
 export default function RootLayout({
@@ -18,9 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-background text-dark min-h-screen flex flex-col`}>
+      <body className={inter.className}>
         <Navbar />
-        <main className="flex-grow">{children}</main>
+        <main className="min-h-screen pt-16">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

@@ -3,13 +3,32 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: #F8FAFC;
-    --foreground: #0F172A;
-  }
-
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    @apply bg-background text-text-primary antialiased;
   }
+}
+
+.glass {
+  @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl;
+}
+
+.glass-dark {
+  @apply bg-dark/80 backdrop-blur-xl border border-white/10 shadow-2xl;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-secondary;
+}
+
+.gradient-bg {
+  @apply bg-gradient-to-r from-primary via-accent to-secondary;
+}
+
+/* Mesh Gradient Animation */
+.mesh-bg {
+  background-color: #0c1222;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.3) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.3) 0, transparent 50%);
 }

@@ -1,104 +1,303 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Map, Calendar, Users } from "lucide-react";
-
-const interestsList = ["Adventure", "Culture", "Beach", "Food", "Nature", "Nightlife", "Shopping", "Romance"];
+import { MapPin, Calendar as CalendarIcon, ArrowRight, ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { INTERESTS } from "@/lib/constants";
 
 export default function PlanPage() {
   const router = useRouter();
-  const [destination, setDestination] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    destination: "",
+    startDate: "",
+    endDate: "",
+    travelers: "2",
+    budget: 2000,
+    interests: [] as string[],
+    pace: "moderate"
+  });
 
-  const toggleInterest = (i: string) => {
-    setInterests(prev => prev.includes(i) ? prev.filter(item => item !== i) : [...prev, i]);
+  const handleInterestToggle = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(id) 
+        ? prev.interests.filter(i => i !== id)
+        : [...prev.interests, id]
+    }));
   };
 
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const generateItinerary = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      router.push(`/trip/trip-${Math.floor(Math.random() * 10000)}`);
-    }, 2000);
+    try {
+      // Create a trip ID (mock or save to DB here)
+      const tripId = Date.now().toString();
+      
+      // Save form data to localStorage so the results page can use it
+      localStorage.setItem(`trip_${tripId}`, JSON.stringify(formData));
+      
+      // Navigate to results
+      router.push(`/trip/${tripId}`);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-xl p-8"
-        >
-          <h1 className="text-3xl font-bold text-dark mb-2">Design Your Trip</h1>
-          <p className="text-gray-500 mb-8">Fill in the details and our AI will craft the perfect itinerary.</p>
-          
-          <form onSubmit={handleGenerate} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Where to?</label>
-              <div className="relative">
-                <Map className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input 
-                  type="text" 
-                  required
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. Tokyo, Paris, Bali" 
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                />
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <div className="w-full max-w-3xl">
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+            {["Destination", "Preferences", "Review"].map((label, i) => (
+              <div key={label} className={cn(
+                "text-sm font-medium",
+                step >= i + 1 ? "text-primary" : "text-gray-400"
+              )}>
+                {label}
               </div>
-            </div>
+            ))}
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-500 ease-in-out"
+              style={{ width: `${((step - 1) / 2) * 100}%` }}
+            />
+          </div>
+        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dates</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input type="text" placeholder="Select dates" className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none" />
+        {/* Form Container */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="p-8 sm:p-12">
+            
+            {/* Step 1 */}
+            {step === 1 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-bold mb-2">Where do you want to go?</h2>
+                  <p className="text-gray-500">Let&apos;s start with the basics of your trip.</p>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Travelers</label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input type="number" min="1" placeholder="2" className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none" />
-                </div>
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Interests</label>
-              <div className="flex flex-wrap gap-2">
-                {interestsList.map((interest) => (
-                  <button
-                    type="button"
-                    key={interest}
-                    onClick={() => toggleInterest(interest)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      interests.includes(interest) 
-                        ? 'bg-primary text-white' 
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input 
+                        type="text" 
+                        value={formData.destination}
+                        onChange={(e) => setFormData({...formData, destination: e.target.value})}
+                        placeholder="e.g. Paris, France" 
+                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input 
+                          type="date" 
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                          className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input 
+                          type="date" 
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                          className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex justify-end">
+                  <button 
+                    onClick={() => setStep(2)}
+                    disabled={!formData.destination || !formData.startDate || !formData.endDate}
+                    className="px-8 py-4 bg-primary text-white rounded-xl font-bold flex items-center hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    {interest}
+                    Next Step <ArrowRight className="ml-2 w-5 h-5" />
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <button 
-              type="submit" 
-              disabled={loading || !destination}
-              className="w-full bg-gradient-to-r from-primary to-accent text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-70 flex justify-center items-center gap-2"
-            >
-              {loading ? "Generating Magic..." : "Generate Itinerary"}
-            </button>
-          </form>
-        </motion.div>
+            {/* Step 2 */}
+            {step === 2 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-bold mb-2">What&apos;s your style?</h2>
+                  <p className="text-gray-500">Help us personalize your experience.</p>
+                </div>
+
+                <div className="space-y-8">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-gray-700">Budget ($)</label>
+                      <span className="font-bold text-primary">${formData.budget}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="500" 
+                      max="10000" 
+                      step="100"
+                      value={formData.budget}
+                      onChange={(e) => setFormData({...formData, budget: Number(e.target.value)})}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                      <span>$500</span>
+                      <span>$10,000+</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Interests</label>
+                    <div className="flex flex-wrap gap-3">
+                      {INTERESTS.map((interest) => (
+                        <button
+                          key={interest.id}
+                          onClick={() => handleInterestToggle(interest.id)}
+                          className={cn(
+                            "px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center space-x-2",
+                            formData.interests.includes(interest.id)
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          )}
+                        >
+                          <span>{interest.icon}</span>
+                          <span>{interest.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Pace</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      {["relaxed", "moderate", "packed"].map((pace) => (
+                        <button
+                          key={pace}
+                          onClick={() => setFormData({...formData, pace})}
+                          className={cn(
+                            "py-3 rounded-xl border text-sm font-medium transition-all capitalize",
+                            formData.pace === pace
+                              ? "border-primary bg-primary text-white"
+                              : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          )}
+                        >
+                          {pace}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex justify-between">
+                  <button 
+                    onClick={() => setStep(1)}
+                    className="px-6 py-4 text-gray-500 hover:text-gray-900 font-medium flex items-center"
+                  >
+                    <ArrowLeft className="mr-2 w-5 h-5" /> Back
+                  </button>
+                  <button 
+                    onClick={() => setStep(3)}
+                    disabled={formData.interests.length === 0}
+                    className="px-8 py-4 bg-primary text-white rounded-xl font-bold flex items-center hover:bg-primary/90 disabled:opacity-50 transition-all"
+                  >
+                    Review <ArrowRight className="ml-2 w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 */}
+            {step === 3 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-bold mb-2">Ready to generate?</h2>
+                  <p className="text-gray-500">Review your trip details.</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                  <div className="grid grid-cols-2 gap-y-6">
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Destination</span>
+                      <p className="font-semibold text-lg">{formData.destination}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Dates</span>
+                      <p className="font-semibold">{formData.startDate} to {formData.endDate}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Budget</span>
+                      <p className="font-semibold">${formData.budget}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Pace</span>
+                      <p className="font-semibold capitalize">{formData.pace}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Interests</span>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {formData.interests.map(id => {
+                          const interest = INTERESTS.find(i => i.id === id);
+                          return (
+                            <span key={id} className="text-sm bg-white px-3 py-1 rounded-full border border-gray-200">
+                              {interest?.icon} {interest?.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex justify-between">
+                  <button 
+                    onClick={() => setStep(2)}
+                    disabled={loading}
+                    className="px-6 py-4 text-gray-500 hover:text-gray-900 font-medium flex items-center"
+                  >
+                    <ArrowLeft className="mr-2 w-5 h-5" /> Back
+                  </button>
+                  <button 
+                    onClick={generateItinerary}
+                    disabled={loading}
+                    className="px-8 py-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-bold flex items-center hover:opacity-90 disabled:opacity-80 transition-all shadow-lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                        Crafting your trip...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 w-5 h-5" />
+                        Generate My Itinerary
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+            
+          </div>
+        </div>
       </div>
     </div>
   );
