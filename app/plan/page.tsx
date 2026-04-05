@@ -2,14 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Calendar as CalendarIcon, ArrowRight, ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { MapPin, Calendar as CalendarIcon, ArrowRight, ArrowLeft, Loader2, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { INTERESTS } from "@/lib/constants";
+import { INTERESTS, POPULAR_DESTINATIONS } from "@/lib/constants";
 
 export default function PlanPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [destinationOpen, setDestinationOpen] = useState(false);
+  const today = new Date().toISOString().split('T')[0];
+
+  const selectDestination = (name: string) => {
+    setFormData(prev => ({ ...prev, destination: name }));
+    setDestinationOpen(false);
+  };
   const [formData, setFormData] = useState({
     destination: "",
     startDate: "",
@@ -102,19 +109,38 @@ export default function PlanPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Destination</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input 
-                        type="text" 
-                        value={formData.destination}
-                        onChange={(e) => setFormData({...formData, destination: e.target.value})}
-                        placeholder="e.g. Paris, France" 
-                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-lg"
-                      />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
+                        <button
+                          type="button"
+                          onClick={() => setDestinationOpen(!destinationOpen)}
+                          className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-lg text-left bg-white flex items-center"
+                        >
+                          {formData.destination || <span className="text-gray-400">e.g. Paris, France</span>}
+                          <ChevronDown className={cn("absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform", destinationOpen && "rotate-180")} />
+                        </button>
+                        {destinationOpen && (
+                          <div className="absolute z-50 w-full mt-2 bg-white rounded-xl border border-gray-200 shadow-xl max-h-72 overflow-y-auto">
+                            {POPULAR_DESTINATIONS.map(d => (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => selectDestination(d.name)}
+                                className="w-full px-4 py-3 text-left hover:bg-primary/5 flex items-center gap-3 transition-colors"
+                              >
+                                <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                                <div>
+                                  <span className="font-medium">{d.name}</span>
+                                  <span className="text-gray-400 text-sm ml-2">{d.country}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
@@ -123,6 +149,7 @@ export default function PlanPage() {
                         <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input 
                           type="date" 
+                          min={today}
                           value={formData.startDate}
                           onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                           className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
@@ -135,6 +162,7 @@ export default function PlanPage() {
                         <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input 
                           type="date" 
+                          min={formData.startDate || today}
                           value={formData.endDate}
                           onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                           className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
