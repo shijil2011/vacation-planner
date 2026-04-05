@@ -32,16 +32,36 @@ export default function PlanPage() {
   const generateItinerary = async () => {
     setLoading(true);
     try {
-      // Create a trip ID (mock or save to DB here)
       const tripId = Date.now().toString();
       
-      // Save form data to localStorage so the results page can use it
-      localStorage.setItem(`trip_${tripId}`, JSON.stringify(formData));
+      // Call AI API to generate real itinerary
+      const res = await fetch('/api/generate-itinerary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: formData.destination,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          travelers: formData.travelers,
+          budget: formData.budget,
+          interests: formData.interests,
+          pace: formData.pace,
+        })
+      });
       
-      // Navigate to results
+      const result = await res.json();
+      
+      // Save both form data AND generated itinerary to localStorage
+      localStorage.setItem(`trip_${tripId}`, JSON.stringify({
+        formData,
+        itinerary: result,
+        generatedAt: new Date().toISOString()
+      }));
+      
+      // Navigate to results with the real data
       router.push(`/trip/${tripId}`);
     } catch (error) {
-      console.error(error);
+      console.error('Failed to generate:', error);
       setLoading(false);
     }
   };

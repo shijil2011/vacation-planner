@@ -1,0 +1,13 @@
+{
+  "model": {
+    "primary": "ollama/glm-5:cloud",
+    "fallbacks": [
+      "ollama/minimax-m2.7:cloud",
+      "ollama/minimax-m2.5:cloud",
+      "ollama/kimi-k2.5:cloud"
+    ]
+  },
+  "compaction": {
+    "mode": "default"
+  }
+}
