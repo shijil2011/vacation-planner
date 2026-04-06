@@ -1,23 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { MapPin, Calendar as CalendarIcon, ArrowRight, ArrowLeft, Loader2, Sparkles, ChevronDown } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { MapPin, Calendar as CalendarIcon, ArrowRight, ArrowLeft, Loader2, Sparkles, ChevronDown, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { INTERESTS, POPULAR_DESTINATIONS } from "@/lib/constants";
 
-export default function PlanPage() {
+function PlanPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [destinationOpen, setDestinationOpen] = useState(false);
   const today = new Date().toISOString().split('T')[0];
 
-  const selectDestination = (name: string) => {
-    setFormData(prev => ({ ...prev, destination: name }));
-    setDestinationOpen(false);
-  };
   const [formData, setFormData] = useState({
+    from: "",
     destination: "",
     startDate: "",
     endDate: "",
@@ -27,10 +25,34 @@ export default function PlanPage() {
     pace: "moderate"
   });
 
+  useEffect(() => {
+    const from = searchParams.get("from") || "";
+    const to = searchParams.get("to") || "";
+    const start = searchParams.get("startDate") || "";
+    const end = searchParams.get("endDate") || "";
+    const trav = searchParams.get("travelers") || "2";
+    const budg = searchParams.get("budget") || "2000";
+
+    setFormData(prev => ({
+      ...prev,
+      from,
+      destination: to,
+      startDate: start,
+      endDate: end,
+      travelers: trav.replace(/[^0-9]/g, "") || "2",
+      budget: Number(budg) || 2000
+    }));
+  }, [searchParams]);
+
+  const selectDestination = (name: string) => {
+    setFormData(prev => ({ ...prev, destination: name }));
+    setDestinationOpen(false);
+  };
+
   const handleInterestToggle = (id: string) => {
     setFormData(prev => ({
       ...prev,
-      interests: prev.interests.includes(id) 
+      interests: prev.interests.includes(id)
         ? prev.interests.filter(i => i !== id)
         : [...prev.interests, id]
     }));
@@ -41,7 +63,6 @@ export default function PlanPage() {
     try {
       const tripId = Date.now().toString();
       
-      // Call AI API to generate real itinerary
       const res = await fetch('/api/generate-itinerary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,14 +79,12 @@ export default function PlanPage() {
       
       const result = await res.json();
       
-      // Save both form data AND generated itinerary to localStorage
       localStorage.setItem(`trip_${tripId}`, JSON.stringify({
         formData,
         itinerary: result,
         generatedAt: new Date().toISOString()
       }));
       
-      // Navigate to results with the real data
       router.push(`/trip/${tripId}`);
     } catch (error) {
       console.error('Failed to generate:', error);
@@ -76,6 +95,28 @@ export default function PlanPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
       <div className="w-full max-w-3xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium mb-4">
+            <Sparkles className="w-4 h-4 mr-2" />
+            AI-Powered Trip Planning
+          </div>
+          <h1 className="text-3xl font-bold mb-2">Plan Your Perfect Trip</h1>
+          {formData.from && formData.destination && (
+            <div className="flex items-center justify-center gap-3 text-gray-500 mt-3">
+              <span className="font-medium text-gray-700">{formData.from.split('(')[0].trim()}</span>
+              <Plane className="w-4 h-4 text-primary" />
+              <span className="font-medium text-gray-700">{formData.destination}</span>
+              {formData.startDate && (
+                <>
+                  <span className="text-gray-300">•</span>
+                  <span>{formData.startDate} to {formData.endDate}</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
@@ -284,6 +325,10 @@ export default function PlanPage() {
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                   <div className="grid grid-cols-2 gap-y-6">
                     <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">From</span>
+                      <p className="font-semibold text-lg">{formData.from || 'Not specified'}</p>
+                    </div>
+                    <div>
                       <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Destination</span>
                       <p className="font-semibold text-lg">{formData.destination}</p>
                     </div>
@@ -294,10 +339,6 @@ export default function PlanPage() {
                     <div>
                       <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Budget</span>
                       <p className="font-semibold">${formData.budget}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Pace</span>
-                      <p className="font-semibold capitalize">{formData.pace}</p>
                     </div>
                     <div className="col-span-2">
                       <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Interests</span>
@@ -348,5 +389,13 @@ export default function PlanPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PlanPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+      <PlanPageContent />
+    </Suspense>
   );
 }
